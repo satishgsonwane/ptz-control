@@ -62,7 +62,6 @@ export default function PTZControl() {
         pansetpoint: panValue,
         tiltsetpoint: tiltValue,
         zoomsetpoint: zoomValue,
-        natsServer: natsUrl
       }
 
       console.log('Sending message:', message)
