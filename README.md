@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PTZ Camera Control Web Interface
 
-## Getting Started
+A Next.js application for controlling PTZ (Pan, Tilt, Zoom) cameras through NATS messaging.
 
-First, run the development server:
+## Features
 
+- Camera selection (1-6)
+- Pan control (-55° to 55°)
+- Tilt control (-20° to 20°)
+- Zoom control (0 to 16000)
+- Real-time validation
+- NATS message publishing
+
+## Prerequisites
+
+- Node.js 18 or higher
+- NATS Server
+- npm or yarn
+
+## Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd ptz-control
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Install shadcn/ui components:
+```bash
+npx shadcn-ui@latest init
+npx shadcn-ui@latest add button select input label card toast
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Create `.env.local` in root directory:
+```env
+NATS_URL=nats://localhost:4222 # Replace with your NATS server URL
+```
 
-## Learn More
+## Development
 
-To learn more about Next.js, take a look at the following resources:
+1. Start NATS server:
+```bash
+nats-server
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Run development server:
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Access at http://localhost:3000
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+├── app/
+│   ├── api/
+│   │   └── nats/
+│   │       └── route.ts    # NATS API endpoint
+│   └── page.tsx            # Main PTZ control interface
+├── components/
+│   └── ui/                 # shadcn/ui components
+├── .env.local             # Environment variables
+└── package.json
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Usage
+
+1. Select a camera from the dropdown
+2. Enter Pan, Tilt, and Zoom values within specified ranges
+3. Click "Move Camera" to send command
+4. Watch for feedback toast notifications
+
+## Dependencies
+
+- Next.js 14
+- React 18
+- shadcn/ui
+- NATS.js
+- TypeScript
+- Tailwind CSS
