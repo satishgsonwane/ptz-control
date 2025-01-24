@@ -13,10 +13,27 @@ export default function PTZControl() {
   const [pan, setPan] = useState<string>('')
   const [tilt, setTilt] = useState<string>('')
   const [zoom, setZoom] = useState<string>('')
+  const [natsServer, setNatsServer] = useState<string>('') // Add NATS server state
+
+  const validateIPAddress = (ip: string) => {
+    const pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (!pattern.test(ip)) return false;
+    return ip.split('.').every(num => parseInt(num) >= 0 && parseInt(num) <= 255);
+  };
 
   const handleMove = async () => {
     try {
-      // Validate inputs
+      if (!natsServer || !validateIPAddress(natsServer)) {
+        toast({
+          title: 'Invalid IP Address',
+          description: 'Please enter valid IP in format: xxx.xxx.x.xxx',
+          variant: 'destructive',
+        })
+        return
+      }
+      
+      const natsUrl = `nats://${natsServer}:4222`;
+
       const panValue = Number(pan)
       const tiltValue = Number(tilt)
       const zoomValue = Number(zoom)
@@ -38,8 +55,10 @@ export default function PTZControl() {
       const message = {
         pansetpoint: panValue,
         tiltsetpoint: tiltValue,
-        zoomsetpoint: zoomValue
+        zoomsetpoint: zoomValue,
+        natsServer: natsUrl // Include NATS server in the request
       }
+      console.log('Sending message:', message)
       
       await fetch('/api/nats', {
         method: 'POST',
@@ -48,7 +67,8 @@ export default function PTZControl() {
         },
         body: JSON.stringify({
           subject: `ptzcontrol.camera${camera}`,
-          message
+          message,
+          natsServer: natsUrl // Pass NATS server to API
         }),
       })
 
@@ -80,6 +100,20 @@ export default function PTZControl() {
           </CardHeader>
           <CardContent className="space-y-6 p-6">
             <div className="space-y-4">
+              {/* Add NATS server input */}
+              <div>
+                <Label className="text-sm font-medium" htmlFor="natsServer">NATS Server IP Address</Label>
+                <Input
+                  id="natsServer"
+                  type="text"
+                  placeholder="xxx.xxx.x.xxx"
+                  pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                  className="mt-1.5"
+                  value={natsServer}
+                  onChange={(e) => setNatsServer(e.target.value)}
+                />
+              </div>
+
               <div>
                 <Label className="text-sm font-medium" htmlFor="camera">Camera Selection</Label>
                 <Select value={camera} onValueChange={setCamera}>
@@ -137,7 +171,7 @@ export default function PTZControl() {
 
             <Button 
               onClick={handleMove}
-              disabled={!camera || !pan || !tilt || !zoom}
+              disabled={!camera || !pan || !tilt || !zoom || !natsServer}
               className="w-full"
             >
               Move Camera

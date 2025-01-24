@@ -5,10 +5,10 @@ import { NextResponse } from 'next/server'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { subject, message } = body
+    const { subject, message, natsServer } = body
 
-    // Connect to NATS server
-    const nc: NatsConnection = await connect({ servers: process.env.NATS_URL })
+    // Connect to NATS server using the provided address
+    const nc: NatsConnection = await connect({ servers: natsServer })
 
     // Publish message
     await nc.publish(subject, JSON.stringify(message))
