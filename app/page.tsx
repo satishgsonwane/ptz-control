@@ -74,7 +74,6 @@ export default function PTZControl() {
         body: JSON.stringify({
           subject: `ptzcontrol.camera${camera}`,
           message,
-          natsServer: natsUrl
         }),
       })
 
