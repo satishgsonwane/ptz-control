@@ -36,10 +36,6 @@ export default function PTZControl() {
         })
         return
       }
-
-      const natsServer = `${ip1}.${ip2}.${ip3}.${ip4}`
-      const natsUrl = `nats://${natsServer}:4222`
-
       const panValue = Number(pan)
       const tiltValue = Number(tilt)
       const zoomValue = Number(zoom)
