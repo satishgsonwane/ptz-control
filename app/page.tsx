@@ -13,26 +13,32 @@ export default function PTZControl() {
   const [pan, setPan] = useState<string>('')
   const [tilt, setTilt] = useState<string>('')
   const [zoom, setZoom] = useState<string>('')
-  const [natsServer, setNatsServer] = useState<string>('') // Add NATS server state
+  const [ip1, setIp1] = useState<string>('')
+  const [ip2, setIp2] = useState<string>('')
+  const [ip3, setIp3] = useState<string>('')
+  const [ip4, setIp4] = useState<string>('')
 
-  const validateIPAddress = (ip: string) => {
-    const pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-    if (!pattern.test(ip)) return false;
-    return ip.split('.').every(num => parseInt(num) >= 0 && parseInt(num) <= 255);
-  };
+  const validateIPOctet = (value: string) => {
+    const num = parseInt(value)
+    return num >= 0 && num <= 255
+  }
 
   const handleMove = async () => {
     try {
-      if (!natsServer || !validateIPAddress(natsServer)) {
+      // Validate IP octets
+      if (!ip1 || !ip2 || !ip3 || !ip4 || 
+          !validateIPOctet(ip1) || !validateIPOctet(ip2) || 
+          !validateIPOctet(ip3) || !validateIPOctet(ip4)) {
         toast({
           title: 'Invalid IP Address',
-          description: 'Please enter valid IP in format: xxx.xxx.x.xxx',
+          description: 'Please enter valid IP address (0-255 for each octet)',
           variant: 'destructive',
         })
         return
       }
-      
-      const natsUrl = `nats://${natsServer}:4222`;
+
+      const natsServer = `${ip1}.${ip2}.${ip3}.${ip4}`
+      const natsUrl = `nats://${natsServer}:4222`
 
       const panValue = Number(pan)
       const tiltValue = Number(tilt)
@@ -44,7 +50,7 @@ export default function PTZControl() {
         zoomValue < 0 || zoomValue > 16000
       ) {
         toast({
-          title: 'Invalid input values',
+          title: 'Invalid input values', 
           description: 'Please check the input ranges',
           variant: 'destructive',
         })
@@ -56,8 +62,9 @@ export default function PTZControl() {
         pansetpoint: panValue,
         tiltsetpoint: tiltValue,
         zoomsetpoint: zoomValue,
-        natsServer: natsUrl // Include NATS server in the request
+        natsServer: natsUrl
       }
+
       console.log('Sending message:', message)
       
       await fetch('/api/nats', {
@@ -68,7 +75,7 @@ export default function PTZControl() {
         body: JSON.stringify({
           subject: `ptzcontrol.camera${camera}`,
           message,
-          natsServer: natsUrl // Pass NATS server to API
+          natsServer: natsUrl
         }),
       })
 
@@ -82,6 +89,20 @@ export default function PTZControl() {
         description: 'Failed to send command',
         variant: 'destructive',
       })
+    }
+  }
+
+  // Handle input focus advancing
+  const handleIpInput = (
+    value: string, 
+    setter: (value: string) => void,
+    nextInput?: HTMLInputElement
+  ) => {
+    if (value.length > 3) return
+    const numValue = value.replace(/\D/g, '')
+    setter(numValue)
+    if (numValue.length === 3 && nextInput) {
+      nextInput.focus()
     }
   }
 
@@ -100,20 +121,48 @@ export default function PTZControl() {
           </CardHeader>
           <CardContent className="space-y-6 p-6">
             <div className="space-y-4">
-              {/* Add NATS server input */}
+              {/* IP Address inputs */}
               <div>
-                <Label className="text-sm font-medium" htmlFor="natsServer">NATS Server IP Address</Label>
-                <Input
-                  id="natsServer"
-                  type="text"
-                  placeholder="xxx.xxx.x.xxx"
-                  pattern="^(\d{1,3}\.){3}\d{1,3}$"
-                  className="mt-1.5"
-                  value={natsServer}
-                  onChange={(e) => setNatsServer(e.target.value)}
-                />
+                <Label className="text-sm font-medium">NATS Server IP Address</Label>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <Input
+                    type="text"
+                    maxLength={3}
+                    className="w-[4.5rem] text-center"
+                    value={ip1}
+                    onChange={(e) => handleIpInput(e.target.value, setIp1, document.getElementById('ip2') as HTMLInputElement)}
+                  />
+                  <span className="text-lg">.</span>
+                  <Input
+                    id="ip2"
+                    type="text"
+                    maxLength={3}
+                    className="w-[4.5rem] text-center"
+                    value={ip2}
+                    onChange={(e) => handleIpInput(e.target.value, setIp2, document.getElementById('ip3') as HTMLInputElement)}
+                  />
+                  <span className="text-lg">.</span>
+                  <Input
+                    id="ip3"
+                    type="text"
+                    maxLength={3}
+                    className="w-[4.5rem] text-center"
+                    value={ip3}
+                    onChange={(e) => handleIpInput(e.target.value, setIp3, document.getElementById('ip4') as HTMLInputElement)}
+                  />
+                  <span className="text-lg">.</span>
+                  <Input
+                    id="ip4"
+                    type="text"
+                    maxLength={3}
+                    className="w-[4.5rem] text-center"
+                    value={ip4}
+                    onChange={(e) => handleIpInput(e.target.value, setIp4)}
+                  />
+                </div>
               </div>
 
+              {/* Rest of the form remains the same */}
               <div>
                 <Label className="text-sm font-medium" htmlFor="camera">Camera Selection</Label>
                 <Select value={camera} onValueChange={setCamera}>
@@ -171,7 +220,7 @@ export default function PTZControl() {
 
             <Button 
               onClick={handleMove}
-              disabled={!camera || !pan || !tilt || !zoom || !natsServer}
+              disabled={!camera || !pan || !tilt || !zoom || !ip1 || !ip2 || !ip3 || !ip4}
               className="w-full"
             >
               Move Camera
