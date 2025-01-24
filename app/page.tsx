@@ -84,6 +84,7 @@ export default function PTZControl() {
         description: 'Camera movement initiated',
       })
     } catch (error) {
+      console.error('Failed to send command:', error)
       toast({
         title: 'Error',
         description: 'Failed to send command',
